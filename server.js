@@ -7,7 +7,16 @@ const Payment = require("./models/Payment");
 
 const app = express();
 
-app.use(express.json());
+app.use(express.json({
+    verify: (req, res, buffer) => {
+
+        if (req.originalUrl === "/webhook") {
+            req.rawBody = buffer;
+        }
+
+    }
+}));
+
 app.use(express.static("public"));
 
 const razorpay = new Razorpay({
@@ -117,14 +126,76 @@ mongoose.connect(process.env.MONGODB_URI)
 //STEP : 6 (Webhook server to server)
 app.post("/webhook", (req, res) => {
 
-    console.log("Webhook received!");
+    try {
 
-    console.log(req.body);
+        const webhookSignature =
+            req.headers["x-razorpay-signature"];
 
-    res.json({
-        success: true
-    });
+        const generatedSignature = crypto
+            .createHmac(
+                "sha256",
+                process.env.RAZORPAY_WEBHOOK_SECRET
+            )
+            .update(req.rawBody)
+            .digest("hex");
+
+        if (generatedSignature !== webhookSignature) {
+
+            console.log("Invalid webhook signature!");
+
+            return res.status(400).json({
+                success: false,
+                message: "Invalid webhook signature"
+            });
+        }
+
+        console.log(
+            "Webhook signature verified successfully!"
+        );
+
+        const webhookData = req.body;
+
+        console.log("Webhook event:");
+        console.log(webhookData.event);
+
+        const payment =
+            webhookData.payload.payment.entity;
+
+        console.log("Payment ID:");
+        console.log(payment.id);
+
+        console.log("Order ID:");
+        console.log(payment.order_id);
+
+        console.log("Amount:");
+        console.log(payment.amount);
+
+        console.log("Currency:");
+        console.log(payment.currency);
+
+        console.log("Status:");
+        console.log(payment.status);
+
+        return res.json({
+            success: true,
+            message: "Webhook verified successfully"
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Webhook verification error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Webhook verification failed"
+        });
+    }
 });
+//PORT listen
+
 app.listen(3001, () => {
     console.log("Server running on http://localhost:3001");
 });

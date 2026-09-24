@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Payment Learning</title>
+</head>
+
+<body>
+
+    <h1>Payment Gateway Learning</h1>
+
+    <h2>Product: Test Product</h2>
+
+    <h3>Price: ₹500</h3>
+
+    <button onclick="payNow()">
+        Pay ₹500
+    </button>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <script>
+
+        async function payNow() {
+
+            console.log("Creating Razorpay order...");
+
+            const response = await fetch("/create-order", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            });
+
+            const order = await response.json();
+
+            console.log("Order received:");
+            console.log(order);
+
+            const options = {
+
+                key: "rzp_test_TfR76eDfuXZFb0",
+
+                amount: order.amount,
+
+                currency: order.currency,
+
+                name: "Payment Learning",
+
+                description: "Test Payment",
+
+                order_id: order.id,
+
+                handler: async function (response) {
+
+                    console.log("========== PAYMENT SUCCESS ==========");
+
+                    console.log("Payment ID:");
+                    console.log(response.razorpay_payment_id);
+
+                    console.log("Order ID:");
+                    console.log(response.razorpay_order_id);
+
+                    console.log("Signature:");
+                    console.log(response.razorpay_signature);
+
+                    const verificationResponse = await fetch("/verify-payment", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(response)
+                    });
+
+                    const verificationResult = await verificationResponse.json();
+
+                    console.log("Backend verification result:");
+                    console.log(verificationResult);
+
+                }
+            };
+
+            const razorpay = new Razorpay(options);
+
+            razorpay.open();
+        }
+
+    </script>
+
+</body>
+
+</html>

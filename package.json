@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "dotenv": "^18.0.3",
+    "express": "^5.2.1",
+    "i": "^0.3.7",
+    "mongoose": "^9.10.2",
+    "razorpay": "^2.9.8"
+  },
+  "name": "payment_gateway",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
